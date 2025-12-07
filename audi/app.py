@@ -50,7 +50,11 @@ RANKS = {
     "Officer": ["Air Commodore", "Group Captain", "Wing Commander", "Squadron Leader", "Flight Lieutenant", "Flying Officer"],
     "Airmen": ["Honorary Flight Lieutenant", "Honorary Flying Officer", "Master Warrant Officer", "Warrant Officer", "Junior Warrant Officer", "Sergeant", "Corporal", "Leading Aircraftman", "Aircraftman", "Agniveer"]
 }
-
+with app.app_context():
+    db.create_all()
+    # Create upload folder if it doesn't exist
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 # --- Routes ---
 
 @app.route('/')
@@ -243,7 +247,4 @@ def book_tickets(show_id):
     return render_template('booking.html', movie=movie, show=show, booked_seats=booked_seats, user_category=user.category)
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        if not os.path.exists(app.config['UPLOAD_FOLDER']): os.makedirs(app.config['UPLOAD_FOLDER'])
     app.run(debug=True, use_reloader=False)
