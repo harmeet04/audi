@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>Update Movie & Shows</h3>
+            <a href="/logout-admin" class="btn btn-sm btn-outline-danger">Logout</a>
+        </div>
+        
+        <div class="card p-4">
+            <div class="alert alert-warning">
+                <strong>Note:</strong> Uploading a new movie will delete the previous movie and all existing bookings.
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label>Movie Title</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. Fighter" required>
+                </div>
+                <div class="mb-3">
+                    <label>Description</label>
+                    <textarea name="description" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label>Movie Poster</label>
+                    <input type="file" name="image" class="form-control" required>
+                </div>
+
+                <hr>
+                
+                <h5>Show Timings</h5>
+                <p class="text-muted small">Add as many shows as required.</p>
+                
+                <div id="show-container">
+                    <div class="row mb-2">
+                        <div class="col-5">
+                            <label class="small text-muted">Date</label>
+                            <input type="date" name="date[]" class="form-control" required>
+                        </div>
+                        <div class="col-5">
+                            <label class="small text-muted">Time</label>
+                            <input type="time" name="time[]" class="form-control" required>
+                        </div>
+                        <div class="col-2 d-flex align-items-end">
+                            </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="addShow()">+ Add Another Show</button>
+                <br>
+                <button type="submit" class="btn btn-success w-100">Save Movie & Shows</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // JavaScript to add new date/time rows
+    function addShow() {
+        const div = document.createElement('div');
+        div.className = 'row mb-2';
+        div.innerHTML = `
+            <div class="col-5"><input type="date" name="date[]" class="form-control" required></div>
+            <div class="col-5"><input type="time" name="time[]" class="form-control" required></div>
+            <div class="col-2 d-flex align-items-end">
+                <button type="button" class="btn btn-danger btn-sm w-100" onclick="this.parentElement.parentElement.remove()">Remove</button>
+            </div>
+        `;
+        document.getElementById('show-container').appendChild(div);
+    }
+</script>
+{% endblock %}

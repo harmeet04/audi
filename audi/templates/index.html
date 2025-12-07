@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h1 class="mb-4 fw-bold text-primary">19 Wing Auditorium</h1>
+
+        {% if movie %}
+            <div class="card movie-card p-4">
+                <img src="{{ url_for('static', filename='uploads/' + movie.image_file) }}" class="img-fluid rounded mb-3" style="max-height: 400px; object-fit: cover;">
+                
+                <h2>{{ movie.title }}</h2>
+                <p class="lead">{{ movie.description }}</p>
+                <hr>
+                
+                <h4>Select a Show to Book:</h4>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+                    {% for show in movie.shows %}
+                        <a href="{{ url_for('book_tickets', show_id=show.id) }}" class="btn btn-outline-primary btn-lg">
+                            <strong>{{ show.show_date }}</strong> <br> {{ show.show_time }}
+                        </a>
+                    {% endfor %}
+                </div>
+                
+                {% if not movie.shows %}
+                    <div class="alert alert-warning mt-3">No shows scheduled yet.</div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="card p-5">
+                <h3>No shows currently scheduled.</h3>
+                <p>Please check back later.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <h3>Ticket Scanner</h3>
+        <p>Point camera at the QR code</p>
+        
+        <div id="reader" style="width: 100%; border: 2px solid black;"></div>
+        
+        <div id="result-card" class="card mt-3 p-3 shadow-lg" style="display:none;">
+            <h1 id="status-icon">✅</h1>
+            <h4 id="status-text">Verified!</h4>
+            <p><strong>Seats:</strong> <span id="seat-info"></span></p>
+            <button class="btn btn-primary" onclick="resetScanner()">Scan Next</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script>
+    const html5QrCode = new Html5Qrcode("reader");
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // Stop scanning temporarily
+        html5QrCode.pause();
+
+        try {
+            // The QR code contains JSON like {"bid": 5, "seats": "A1,A2"}
+            const data = JSON.parse(decodedText);
+            
+            // Send to Server
+            fetch('/api/scan_ticket', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ booking_id: data.bid })
+            })
+            .then(response => response.json())
+            .then(result => {
+                showResult(result);
+            });
+
+        } catch (e) {
+            alert("Invalid QR Format");
+            html5QrCode.resume();
+        }
+    }
+
+    function showResult(data) {
+        const card = document.getElementById('result-card');
+        const icon = document.getElementById('status-icon');
+        const text = document.getElementById('status-text');
+        const seats = document.getElementById('seat-info');
+        
+        card.style.display = 'block';
+        
+        if(data.status === 'success') {
+            card.className = "card mt-3 p-3 shadow-lg border-success";
+            icon.innerText = "✅";
+            text.innerText = "Entry Allowed";
+            text.className = "text-success";
+            seats.innerText = data.seats;
+        } else {
+            card.className = "card mt-3 p-3 shadow-lg border-danger";
+            icon.innerText = "❌";
+            text.innerText = data.message;
+            text.className = "text-danger";
+            seats.innerText = "N/A";
+        }
+    }
+
+    function resetScanner() {
+        document.getElementById('result-card').style.display = 'none';
+        html5QrCode.resume();
+    }
+
+    // Start Camera
+    html5QrCode.start(
+        { facingMode: "environment" }, // Use Back Camera
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        onScanSuccess
+    ).catch(err => {
+        console.log("Camera Error", err);
+        alert("Camera permission required!");
+    });
+</script>
+{% endblock %}

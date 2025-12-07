@@ -1,0 +1,146 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4">
+            
+            {% if step == 'login' %}
+                <h3 class="text-center">Login with Mobile</h3>
+                <div id="otp-step-1">
+                    <div class="mb-3">
+                        <label>Mobile Number (+91...)</label>
+                        <input type="text" id="phone-number" class="form-control" placeholder="+919876543210" value="+91">
+                        <small class="text-muted">Must include country code (e.g., +91)</small>
+                    </div>
+                    <div id="recaptcha-container" class="mb-3"></div>
+                    <button onclick="sendOTP()" class="btn btn-primary w-100" id="send-btn">Send SMS OTP</button>
+                </div>
+
+                <div id="otp-step-2" style="display:none;">
+                    <div class="alert alert-success">OTP Sent to your mobile!</div>
+                    <div class="mb-3">
+                        <label>Enter OTP Code</label>
+                        <input type="text" id="otp-input" class="form-control" placeholder="123456">
+                    </div>
+                    <button onclick="verifyOTP()" class="btn btn-success w-100">Verify Code</button>
+                </div>
+
+                <form method="POST" id="final-login-form" style="display: none;">
+                    <input type="hidden" name="mobile" id="verified-mobile">
+                </form>
+
+            {% else %}
+                <h3 class="text-center">Registration</h3>
+                <form action="/register" method="POST">
+                    <input type="hidden" name="mobile" value="{{ mobile }}">
+                    
+                    <div class="mb-3">
+                        <label>Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Category</label>
+                        <select id="category" name="category" class="form-select" onchange="updateRanks()" required>
+                            <option value="">Select Category</option>
+                            <option value="Officer">Officer</option>
+                            <option value="Airmen">Airmen</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Rank</label>
+                        <select id="rank" name="rank" class="form-select" required disabled>
+                            <option value="">Select Rank</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Complete Registration</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+<script>
+
+    
+    // --- 1. PASTE YOUR FIREBASE CONFIG HERE ---
+   const firebaseConfig = {
+  apiKey: "AIzaSyDJ1cUgSRgG7nEF4nu66pbtvzlJ9hg_T0Q",
+  authDomain: "auditorium-d8264.firebaseapp.com",
+  projectId: "auditorium-d8264",
+  storageBucket: "auditorium-d8264.firebasestorage.app",
+  messagingSenderId: "329332866472",
+  appId: "1:329332866472:web:d75e9bc420845a26fbf19d",
+  measurementId: "G-D1G9BQMRL7"
+};
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    
+    // Setup Recaptcha (Invisible)
+    window.onload = function() {
+        if(document.getElementById('recaptcha-container')) {
+            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                'size': 'normal',
+                'callback': (response) => {
+                    // reCAPTCHA solved, allow signInWithPhoneNumber.
+                }
+            });
+            recaptchaVerifier.render();
+        }
+    };
+
+    function sendOTP() {
+        const phoneNumber = document.getElementById('phone-number').value;
+        const appVerifier = window.recaptchaVerifier;
+
+        firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier)
+            .then((confirmationResult) => {
+                // SMS sent. Prompt user to type the code.
+                window.confirmationResult = confirmationResult;
+                document.getElementById('otp-step-1').style.display = 'none';
+                document.getElementById('otp-step-2').style.display = 'block';
+            }).catch((error) => {
+                console.error(error);
+                alert("Error sending SMS: " + error.message);
+            });
+    }
+
+    function verifyOTP() {
+        const code = document.getElementById('otp-input').value;
+        window.confirmationResult.confirm(code).then((result) => {
+            // User signed in successfully.
+            const user = result.user;
+            // Send the Verified Mobile number to Python
+            document.getElementById('verified-mobile').value = user.phoneNumber;
+            document.getElementById('final-login-form').submit();
+        }).catch((error) => {
+            alert("Incorrect OTP!");
+        });
+    }
+
+    // Rank Logic
+    const rankData = {{ ranks | tojson }};
+    function updateRanks() {
+        const cat = document.getElementById('category').value;
+        const rankSelect = document.getElementById('rank');
+        rankSelect.innerHTML = '<option value="">Select Rank</option>';
+        rankSelect.disabled = true;
+
+        if(cat && rankData[cat]) {
+            rankData[cat].forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r;
+                opt.innerText = r;
+                rankSelect.appendChild(opt);
+            });
+            rankSelect.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

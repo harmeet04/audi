@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5 text-center">
+        <div class="card p-4 border-success shadow">
+            
+            <h2 class="text-success mb-3">Booking Confirmed!</h2>
+            <hr>
+            
+            <h3 class="fw-bold text-primary">{{ movie.title }}</h3>
+            
+            <p class="fs-5 mb-1">
+                <strong>Date:</strong> {{ show.show_date }} <br>
+                <strong>Time:</strong> {{ show.show_time }}
+            </p>
+            
+            <p class="fs-5 mb-1">
+                <strong>Tickets:</strong> {{ booking.seat_numbers.split(',') | length }}
+            </p>
+
+            <p class="fs-4 text-danger fw-bold">
+                {{ booking.seat_numbers }}
+            </p>
+            
+            <hr>
+            
+            <div class="mt-2">
+                <p><strong>{{ user.rank }} {{ user.name }}</strong></p>
+                <img src="{{ url_for('static', filename='uploads/' + booking.qr_code) }}" class="img-thumbnail" width="180">
+                <p class="text-muted mt-2 small">Scan this QR at the entrance</p>
+            </div>
+            
+            <a href="/" class="btn btn-primary mt-3">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .seat-grid {
+        display: grid;
+        grid-template-columns: repeat(20, 1fr);
+        gap: 4px;
+        overflow-x: auto;
+        min-width: 800px;
+    }
+    .seat {
+        width: 30px; height: 30px;
+        border-radius: 4px; font-size: 9px; 
+        display: flex; align-items: center; justify-content: center;
+        background-color: #eee; border: 1px solid #ccc;
+    }
+    
+    /* RED: Booked but not arrived */
+    .seat.booked { background-color: #dc3545; color: white; } 
+    
+    /* GREEN: Arrived (Scanned) - CHANGED TO GREEN */
+    .seat.filled { background-color: #198754; color: white; } 
+</style>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Live Occupancy</h2>
+        
+        <form method="GET" class="d-flex">
+            <select name="show_id" class="form-select me-2" onchange="this.form.submit()">
+                {% for s in shows %}
+                    <option value="{{ s.id }}" {% if selected_show and selected_show.id == s.id %}selected{% endif %}>
+                        {{ s.show_date }} | {{ s.show_time }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="mb-3 text-center">
+        <span class="badge bg-secondary me-2">Empty</span>
+        <span class="badge bg-danger me-2">Booked (Not Arrived)</span>
+        <span class="badge bg-success">Filled (Scanned)</span> </div>
+
+    <div class="d-flex justify-content-center bg-white p-3 border rounded shadow-sm">
+        <div class="seat-grid">
+            {% for row_num in range(1, 16) %}
+                {% set row_char = (64 + row_num) | chr %} 
+                {% for col in range(1, 21) %}
+                    {% set seat_id = row_char ~ col %}
+                    
+                    {% if seat_id in filled_seats %}
+                        <div class="seat filled" title="Occupied (Scanned)">{{ seat_id }}</div>
+                    {% elif seat_id in booked_seats %}
+                        <div class="seat booked" title="Booked">{{ seat_id }}</div>
+                    {% else %}
+                        <div class="seat">{{ seat_id }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="mt-4 text-center">
+        <a href="/manager" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

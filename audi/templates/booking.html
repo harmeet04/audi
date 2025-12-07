@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .seat-grid {
+        display: grid;
+        grid-template-columns: repeat(20, 1fr);
+        gap: 5px;
+        overflow-x: auto;
+        min-width: 800px;
+    }
+    .seat {
+        width: 35px;
+        height: 35px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .seat.selected { background-color: #28a745; color: white; border-color: #28a745;}
+    .seat.booked { background-color: #dc3545; color: white; border-color: #dc3545; cursor: not-allowed; opacity: 0.6; }
+    .seat.restricted { 
+        background-color: #e9ecef; color: #adb5bd; border-color: #dee2e6; cursor: not-allowed; 
+        background-image: linear-gradient(45deg, #dee2e6 25%, transparent 25%, transparent 50%, #dee2e6 50%, #dee2e6 75%, transparent 75%, transparent);
+        background-size: 4px 4px;
+    }
+    .legend-box { display: inline-block; width: 15px; height: 15px; margin-right: 5px; border: 1px solid #ccc; vertical-align: middle; }
+</style>
+
+<div class="row">
+    <div class="col-12 text-center">
+        <h3>{{ movie.title }}</h3>
+        <h5 class="text-secondary">{{ show.show_date }} at {{ show.show_time }}</h5>
+        <p class="text-muted">Booking for: <strong>{{ user_category }}</strong></p>
+    </div>
+</div>
+
+<div class="container bg-white p-3 rounded shadow-sm">
+    <div class="mb-3 text-center text-small">
+        <span class="me-3"><span class="legend-box bg-white"></span>Available</span>
+        <span class="me-3"><span class="legend-box bg-success"></span>Selected</span>
+        <span class="me-3"><span class="legend-box bg-danger"></span>Booked</span>
+        <span class="me-3"><span class="legend-box" style="background-color: #e9ecef;"></span>Restricted</span>
+    </div>
+
+    <div class="screen">SCREEN THIS WAY</div>
+    
+    <div class="d-flex justify-content-center">
+        <div class="seat-grid">
+            {% for row_num in range(1, 16) %}
+                {% set row_char = (64 + row_num) | chr %} 
+                {% set is_officer_row = row_num >= 13 %}
+                
+                {% set is_allowed = False %}
+                {% if user_category == 'Officer' and is_officer_row %}
+                    {% set is_allowed = True %}
+                {% elif user_category == 'Airmen' and not is_officer_row %}
+                    {% set is_allowed = True %}
+                {% endif %}
+
+                {% for col in range(1, 21) %}
+                    {% set seat_id = row_char ~ col %}
+                    
+                    <div class="seat 
+                        {% if seat_id in booked_seats %}booked{% endif %} 
+                        {% if not is_allowed %}restricted{% endif %}" 
+                        
+                        data-id="{{ seat_id }}"
+                        onclick="toggleSeat(this)">
+                        
+                        {{ row_char }}{{ col }}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 text-center">
+    <form method="POST">
+        <input type="hidden" name="selected_seats" id="selected_seats_input">
+        <div class="mb-3">
+            <strong>Selected Seats: </strong> <span id="display_seats" class="text-primary">None</span>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">Confirm Booking</button>
+    </form>
+</div>
+
+<script>
+    let selected = [];
+    function toggleSeat(el) {
+        if(el.classList.contains('booked') || el.classList.contains('restricted')) return;
+        
+        const id = el.getAttribute('data-id');
+        if(selected.includes(id)) {
+            selected = selected.filter(s => s !== id);
+            el.classList.remove('selected');
+        } else {
+            selected.push(id);
+            el.classList.add('selected');
+        }
+        document.getElementById('display_seats').innerText = selected.join(', ');
+        document.getElementById('selected_seats_input').value = selected.join(',');
+    }
+</script>
+{% endblock %}
